@@ -66,30 +66,39 @@
   (define label (filename->label img-name))
   (define vec (img->vector img-name))
   (cond ((= (linear-classifier vec) label)
-         (display "good!\n")) 
+         ;(printf "~a\tgood!\n" img-name)
+         ) 
         (else 
          (set! sigma (vector-add sigma (scalar-mult label vec)))
-         (display "bad! updated sigma, though.\n"))))
+         (printf "~a\tbad! updated sigma\n" img-name)
+         )))
 
 ;how to train your perceptron...
+
 (define (train)
   (for ([path (in-directory "images/training")])
-    (when (regexp-match? #rx"[.]img$" path)
+    (when (and (regexp-match? #rx"[.]img$" path) 
+               (not (regexp-match? #rx"25.0.img$" path))) ; removing img 25 because it constantly fails
       (train-perceptron (path->string path)))))
 
+; how to test your perceptron...
+
+(define (test)
+  (printf "~a\t~a\t~a\n"
+          (linear-classifier (img->vector "images/sample/test1.img"))
+          (linear-classifier (img->vector "images/sample/test2.img"))
+          (linear-classifier (img->vector "images/sample/test3.img"))))
+
 ;let's see what it thinks before training
-(linear-classifier (img->vector "images/sample/test1.img"))
-(linear-classifier (img->vector "images/sample/test2.img"))
-(linear-classifier (img->vector "images/sample/test3.img"))
+(test)
 
 ;I ran some tests and realized it gets a tad bit better if you train it on
 ;the same data several times.  There's one image it just can't get right.
 ;Maybe it needs more training data? or maybe this is just a silly way to do
 ;this
-(map (λ (x) (train)) (build-list 10 values))
 
-(linear-classifier (img->vector "images/sample/test1.img"))
-(linear-classifier (img->vector "images/sample/test2.img"))
-(linear-classifier (img->vector "images/sample/test3.img"))
+; NB. Training to 100 doesn't help. Converges around 10, except for img 25
+(for-each (λ (x) (train) (test)) (build-list 10 values))
 
 ;that really wasn't great.  it has a false postive.  oh well!  
+ 
